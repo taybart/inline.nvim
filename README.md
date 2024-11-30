@@ -18,4 +18,5 @@ Using `lazy.nvim`:
         -- Optional: Set custom key mappings here
           end
     
-}```
+}
+```
