@@ -5,7 +5,6 @@ local marks = {}
 function M.add_mark()
   local line = vim.fn.line('.') - 1
   local note = vim.fn.input("Add a note: ")
-
   table.insert(marks, { line = line, note = note, file = vim.fn.expand("%") })
 
   vim.api.nvim_buf_set_extmark(0, ns_id, line, 0, {
@@ -15,7 +14,7 @@ function M.add_mark()
 end
 
 function M.delete_mark()
-  local line = vim.fn.line('.') - j
+  local line = vim.fn.line('.') - 1
   for i, mark in ipairs(marks) do
     if mark.file == vim.fn.expand("%") and mark.line == line then
       table.remove(marks, i)
