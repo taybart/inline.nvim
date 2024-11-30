@@ -1,9 +1,10 @@
 local M = {}
-
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
+
+local marks = {}
 
 function M.open_marks_picker()
 	pickers.new({}, {
@@ -18,16 +19,14 @@ function M.open_marks_picker()
 				}
 			end,
 		}),
-
-		sorter = require('telescope.config').values.generic_sorter({}),
+		sorter = require("telescope.config").values.generic_sorter({}),
 		attach_mappings = function(prompt_bufnr, map)
 			actions.select_default:replace(function()
 				local selection = action_state.get_selected_entry()
 				actions.close(prompt_bufnr)
 				vim.cmd("edit " .. selection.value.file)
 				vim.api.nvim_win_set_cursor(0, { selection.value.line + 1, 0 })
-			end
-			)
+			end)
 			return true
 		end,
 	}):find()
