@@ -12,7 +12,7 @@
 Using `lazy.nvim`:
 ```lua
 {
-      "asmorris/line-notes.nvim",
+      "asmorris/line_notes.nvim",
       dependencies = { "nvim-telescope/telescope.nvim"  },
       config = function()
         -- Optional: Set custom key mappings here
