@@ -1,13 +1,20 @@
 local M = {}
 
 function M.setup(opts)
-	opts = opts or {}
-	vim.api.nvim_set_keymap("n", opts.add_mark_key or "<leader>am", ":lua require('line_notes.marks').add_mark()<CR>",
-		{ noremap = true, silent = true })
-	vim.api.nvim_set_keymap("n", opts.list_marks_key or "<leader>lm",
-		":lua require('line_notes.telescope_picker').open_marks_picker()<CR>", { noremap = true, silent = true })
-	vim.api.nvim_set_keymap("n", opts.delete_mark_key or "<leader>dm", ":lua require('line_notes.marks').delete_mark()<CR>",
-		{ noremap = true, silent = true })
+  opts = opts or {}
+
+  require("line_notes.notes").load_notes()
+
+  vim.api.nvim_set_keymap("n", opts.add_note_key or "<leader>an", ":lua require('line_notes.notes').add_note()<CR>",
+    { noremap = true, silent = true })
+  vim.api.nvim_set_keymap("n", opts.list_notes_key or "<leader>ln",
+    ":lua require('line_notes.telescope_picker').open_notes_picker()<CR>", { noremap = true, silent = true })
+  vim.api.nvim_set_keymap("n", opts.delete_note_key or "<leader>dn",
+    ":lua require('line_notes.notes').delete_note()<CR>",
+    { noremap = true, silent = true })
+  vim.api.nvim_set_keymap("n", opts.delete_note_key or "<leader>sn",
+    ":lua require('line_notes.notes').show_note()<CR>",
+    { noremap = true, silent = true })
 end
 
 return M
