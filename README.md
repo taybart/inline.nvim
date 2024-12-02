@@ -3,6 +3,7 @@
 **Line Notes.nvim** is a Neovim plugin to mark specific lines in your code and add notes for future reference. It is meant as a supplement to code comments that you might want to add but don't need or want to be public, or small quick notes to yourself that are tied to a particular line, and are a quicker alternative to Obsidian or Notion or similar.
 
 ## Demo
+![lineNotes](https://github.com/user-attachments/assets/05bfdb0a-f037-44a2-a9cd-244550c4dc04)
 
 ## Features
 
