@@ -19,7 +19,7 @@ function M.open_notes_picker()
   local ns = all_notes[file] or {}
   local notes = {}
   for line, note in pairs(ns) do
-    table.insert(notes, { file = file, line = tonumber(line), note = note })
+    table.insert(notes, { file = file, line = line, content = note })
   end
 
   pickers
@@ -28,35 +28,34 @@ function M.open_notes_picker()
       finder = finders.new_table({
         results = notes,
         entry_maker = function(note)
-          local note_preview = note.note:gsub('\n', ' '):sub(1, 500)
-            .. (note.note:len() > 500 and '...' or '')
+          local note_preview = note.content:gsub('\n', ' '):sub(1, 500)
+            .. (note.content:len() > 500 and '...' or '')
           return {
             value = note,
             display = string.format(
-              '%s:%d - %s',
+              '%s:%s - %s',
               get_relative_path(note.file),
               note.line,
               note_preview
             ),
-            ordinal = string.format('%s %d %s', note.file, note.line, note.note),
+            ordinal = string.format('%s %s %s', note.file, note.line, note.content),
           }
         end,
       }),
       sorter = require('telescope.config').values.generic_sorter({}),
       previewer = require('telescope.previewers').new_buffer_previewer({
         define_preview = function(self, entry)
-          local note_content = entry.value.note
           vim.api.nvim_buf_set_lines(
             self.state.bufnr,
             0,
             -1,
             false,
-            vim.split(note_content, '\n', { plain = true })
+            vim.split(entry.value.content, '\n', { plain = true })
           )
-          vim.api.nvim_buf_set_option(self.state.bufnr, 'modifiable', false)
+          vim.api.nvim_set_option_value('modifiable', false, { buf = self.state.bufnr })
         end,
       }),
-      attach_mappings = function(prompt_bufnr, map)
+      attach_mappings = function(prompt_bufnr)
         actions.select_default:replace(function()
           local selection = action_state.get_selected_entry()
           actions.close(prompt_bufnr)
@@ -66,7 +65,9 @@ function M.open_notes_picker()
             local line_count = vim.api.nvim_buf_line_count(0)
             local target_line = selection.value.line
 
-            if target_line > line_count then
+            if target_line == 'file' then
+              require('line_notes').notes.show(true, true)
+            elseif target_line > line_count then
               print(
                 string.format(
                   'Error: Line %d does not exist in %s',

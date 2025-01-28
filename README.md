@@ -21,11 +21,20 @@ Using `lazy.nvim`:
 ```lua
 {
     "asmorris/line_notes.nvim",
-    dependencies = { 'nvim-telescope/telescope.nvim', 'MunifTanjim/nui.nvim' },
+    dependencies = { 'nvim-telescope/telescope.nvim' },
     config = function()
-        require('line_notes').setup({
-            -- Optional: Add your custom configuration here
+        local in = require('line_notes')
+        in.setup({
+            signcolumn = {
+                enabled = false,
+            },
+            virtual_text = {
+                note_icon = "🗒️",         -- Icon shown in the sign column
+            },
         })
+        vim.keymap.set('n', '<leader>N', function()
+            in.notes.show(false) -- don't enter note (i.e. just display in hover)
+        end)
     end
 }
 ```

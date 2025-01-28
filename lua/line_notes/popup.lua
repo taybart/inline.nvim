@@ -3,22 +3,33 @@ local M = {}
 function M:new()
   self.bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_set_option_value('filetype', 'line_notes', { buf = self.bufnr })
-  vim.api.nvim_set_option_value('buftype', 'nofile', { buf = self.bufnr })
+  vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = self.bufnr })
   vim.api.nvim_set_option_value('modifiable', true, { buf = self.bufnr })
   vim.api.nvim_set_option_value('swapfile', false, { buf = self.bufnr })
+
   return self
 end
 
-function M:mount()
-  self.win = vim.api.nvim_open_win(self.bufnr, true, {
-    relative = 'editor',
+function M:mount(enter, split)
+  if enter == nil then
+    enter = true
+  end
+  local win_opts = vim.tbl_deep_extend('force', {
+    relative = 'cursor',
     width = 50,
     height = 10,
-    row = math.floor((vim.o.lines - 10) / 2),
-    col = math.floor((vim.o.columns - 50) / 2),
+    row = 0,
+    col = 0,
     style = 'minimal',
     border = 'rounded',
-  })
+  }, require('line_notes.config').config.popup)
+  if split then
+    win_opts = {
+      split = 'right',
+      win = 0,
+    }
+  end
+  self.win = vim.api.nvim_open_win(self.bufnr, enter, win_opts)
 end
 
 function M:unmount()
@@ -42,6 +53,18 @@ function M:on(event, callback)
   })
 end
 
+function M:on_save(callback)
+  vim.api.nvim_buf_set_name(self.bufnr, 'line_notes')
+  vim.api.nvim_create_autocmd('BufWriteCmd', {
+    buffer = self.bufnr,
+    callback = function()
+      callback()
+      vim.bo.modified = false
+      return true
+    end,
+  })
+end
+
 function M:map(mode, key, action, opts)
   vim.keymap.set(
     mode,
@@ -49,6 +72,11 @@ function M:map(mode, key, action, opts)
     action,
     vim.tbl_deep_extend('keep', { buffer = self.bufnr }, opts or {})
   )
+end
+
+function M:command(command, callback, opts)
+  local opts = opts or {}
+  vim.api.nvim_buf_create_user_command(self.bufnr, command, callback, opts)
 end
 
 return M

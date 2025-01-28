@@ -9,10 +9,25 @@ M.defaults = {
     delete_note = '<leader>dn',
     show_note = '<leader>sn',
   },
-  signs = {
-    note_icon = '🗒️',
+  signcolumn = {
+    enabled = true,
+    icon = '>',
     highlight = 'Comment',
     number_highlight = '',
+  },
+  virtual_text = {
+    enabled = true,
+    icon = '!',
+    highlight = 'Comment',
+  },
+  popup = {
+    relative = 'cursor',
+    width = 50,
+    height = 10,
+    row = 1,
+    col = 1,
+    style = 'minimal',
+    border = 'rounded',
   },
 }
 
