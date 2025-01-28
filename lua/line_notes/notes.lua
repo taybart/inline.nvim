@@ -1,40 +1,49 @@
 local M = {}
 
-local utils = require('line_notes.utils')
-
 local notes_file = vim.fn.stdpath('data') .. '/line_notes.json'
-local notes = {}
+M.notes = {}
+
+local function where()
+  local line = vim.fn.line('.')
+  local bufnr = vim.api.nvim_get_current_buf()
+  local file = vim.fn.expand('%:p')
+  return { line = line, bufnr = bufnr, file = file }
+end
 
 function M.add()
-  local where = utils.where()
-  local note = utils.note_at_line(notes)
+  local wh = where()
+  local file_notes = M.notes[wh.file] or {}
+  local note = file_notes[tostring(wh.line)]
 
-  local popup = utils.popup()
+  local popup = require('line_notes.popup'):new()
 
-  if note and note.idx == nil and note.original == nil then
-    local note_lines = vim.split(note.original, '\n', { plain = true })
+  if note then
+    local note_lines = vim.split(note, '\n', { plain = true })
     vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, note_lines)
+    popup:set_content(note_lines)
   end
 
   local function save_note()
+    print('saving note')
     local update = vim.api.nvim_buf_get_lines(popup.bufnr, 0, -1, false)
     if update == nil or update == '' then
       return
     end
-    table.insert(
-      notes,
-      { line = where.line - 1, note = table.concat(update, '\n'), file = where.file }
-    )
-    vim.fn.sign_place(where.line, 'LineNotesGroup', 'LineNote', where.bufnr, { lnum = where.line })
+    vim.fn.sign_place(wh.line, 'LineNotesGroup', 'LineNote', wh.bufnr, { lnum = wh.line })
+    file_notes[tostring(wh.line)] = table.concat(update, '\n')
+    M.notes[wh.file] = file_notes
     M.save()
     popup:unmount()
   end
 
+  popup:mount()
+
   popup:map('n', '<enter>', function()
-    print('saving note')
     save_note()
   end, { noremap = true, silent = true })
-  popup:mount()
+  popup:map('n', '', function()
+    save_note()
+  end, { noremap = true, silent = true })
   popup:on('BufLeave', function()
     -- don't save
     popup:unmount()
@@ -42,25 +51,25 @@ function M.add()
 end
 
 function M.show()
-  local note = utils.note_at_line(notes)
-  if not note or note.idx == nil and note.original == nil then
+  local wh = where()
+  local file_notes = M.notes[wh.file] or {}
+  local note = file_notes[tostring(wh.line)]
+  if not note then
     print('no note at line')
     return
   end
 
-  local note_lines = vim.split(note.original, '\n', { plain = true })
+  local note_lines = vim.split(note, '\n', { plain = true })
 
-  local popup = utils.popup()
-  -- mount/open the component
+  local popup = require('line_notes.popup'):new()
   popup:mount()
-  -- unmount component when cursor leaves buffer
   popup:on('BufLeave', function()
     local edited_lines = vim.api.nvim_buf_get_lines(popup.bufnr, 0, -1, false)
     local new_note = table.concat(edited_lines, '\n')
 
-    if note.idx and new_note ~= note.original then
-      print('updating note')
-      notes[note.idx].note = new_note
+    if note ~= new_note then
+      file_notes[tostring(wh.line)] = new_note
+      M.notes[wh.file] = file_notes
       M.save()
     else
       print('no changes made to the note')
@@ -72,49 +81,45 @@ function M.show()
 end
 
 function M.delete()
-  local where = utils.where()
+  local wh = where()
 
-  if vim.api.nvim_buf_is_valid(where.bufnr) == false then
+  if vim.api.nvim_buf_is_valid(wh.bufnr) == false then
     error('invalid buffer!')
     return
   end
 
-  for i, mark in ipairs(notes) do
-    if mark.file == vim.fn.expand('%:p') and mark.line == where.line - 1 then
-      table.remove(notes, i)
-
-      local result =
-        vim.fn.sign_unplace('LineNotesGroup', { id = where.line, buffer = where.bufnr })
-      if result == nil then
-        error('failed to unplace sign')
-        return
-      end
-
-      if M.save() then
-        print('note deleted')
-      end
-      return
-    end
+  if not wh.line then
+    error('invalid line number!')
+    return
   end
 
-  print('no note found on this line')
+  local file_notes = M.notes[wh.file] or {}
+  if not file_notes[tostring(wh.line)] then
+    print('no note found on this line')
+    return
+  end
+  local result = vim.fn.sign_unplace('LineNotesGroup', { id = wh.line, buffer = wh.bufnr })
+
+  table.remove(M.notes, tostring(wh.line))
+  if M.save() then
+    print('note deleted')
+  end
 end
 
 function M.load_for_buffer()
   local bufnr = vim.api.nvim_get_current_buf()
   local current_file = vim.fn.expand('%:p')
 
-  if not notes or type(notes) ~= 'table' then
+  if not M.notes or type(M.notes) ~= 'table' then
     return
   end
 
   vim.fn.sign_unplace('LineNotesGroup', { buffer = bufnr })
 
-  for _, mark in ipairs(notes) do
-    if mark.file == current_file then
-      local lnum = mark.line + 1
-      vim.fn.sign_place(lnum, 'LineNotesGroup', 'LineNote', bufnr, { lnum = lnum })
-    end
+  local file_notes = M.notes[current_file] or {}
+  for lnum in pairs(file_notes) do
+    local ret =
+      vim.fn.sign_place(lnum, 'LineNotesGroup', 'LineNote', bufnr, { lnum = tonumber(lnum) })
   end
 end
 
@@ -123,19 +128,17 @@ function M.load()
   if file then
     local content = file:read('*a')
     file:close()
+    if not content or content == '' then
+      return
+    end
     local decoded = vim.fn.json_decode(content)
     if decoded then
-      notes = decoded
+      M.notes = decoded
 
       local bufnr = vim.api.nvim_get_current_buf()
       vim.fn.sign_unplace('LineNotesGroup', { buffer = bufnr })
 
-      for _, mark in ipairs(notes) do
-        if mark.file == vim.fn.expand('%:p') then
-          local lnum = mark.line + 1
-          vim.fn.sign_place(lnum, 'LineNotesGroup', 'LineNote', bufnr, { lnum = lnum })
-        end
-      end
+      M.load_for_buffer()
     else
       error('failed to decode notes')
     end
@@ -147,7 +150,7 @@ end
 function M.save()
   local file = io.open(notes_file, 'w')
   if file then
-    local encoded = vim.fn.json_encode(notes)
+    local encoded = vim.fn.json_encode(M.notes)
     file:write(encoded)
     file:close()
     print('note updated')
