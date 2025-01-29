@@ -52,6 +52,9 @@ function M.show(enter, file)
 
   local wh = where()
   local file_notes = M.notes[wh.file] or {}
+  if file then
+    wh.line = 'file'
+  end
   local note = file_notes[tostring(wh.line)]
   if not note then
     note = ''
@@ -59,9 +62,6 @@ function M.show(enter, file)
       print('no note at line')
       return
     end
-  end
-  if file then
-    wh.line = 'file'
   end
 
   local note_lines = vim.split(note, '\n', { plain = true })
@@ -71,7 +71,7 @@ function M.show(enter, file)
     M.save(wh.file, wh.line, p.bufnr)
   end)
   p:on('BufLeave', function()
-    M.save(wh.file, wh.line, p.bufnr)
+    -- M.save(wh.file, wh.line, p.bufnr)
     p:unmount()
   end)
 
@@ -162,13 +162,13 @@ function M.load_for_buffer()
     if lnum == 'file' then
       goto continue
     end
-    local lnum = tonumber(lnum)
+    lnum = tonumber(lnum)
     if not lnum then
       print('invalid line number')
       return
     end
     if config.signcolumn.enabled then
-      vim.fn.sign_place(0, 'InlineNotesGroup', 'InlineNote', bufnr, { lnum = tonumber(lnum) })
+      vim.fn.sign_place(0, 'InlineNotesGroup', 'InlineNote', bufnr, { lnum = lnum })
     end
     if config.virtual_text.enabled then
       vim.api.nvim_buf_set_extmark(

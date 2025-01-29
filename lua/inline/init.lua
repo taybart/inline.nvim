@@ -18,7 +18,7 @@ local function setup_commands()
     end,
   })
 
-  vim.api.nvim_create_user_command('InlineNotes', function(opts)
+  vim.api.nvim_create_user_command('Inline', function(opts)
     local args = vim.split(opts.args, '%s+', { trimempty = true })
     -- Default
     if #args == 0 then
@@ -30,11 +30,11 @@ local function setup_commands()
     table.remove(args, 1) -- Remove command
 
     if command == 'show' then
-      il.notes.show()
+      il.notes.show(false)
     elseif command == 'edit' then
       il.notes.show()
     elseif command == 'file' then
-      il.notes.edit_file_note()
+      il.notes.show(true, true)
     elseif command == 'add' then
       il.notes.add()
     elseif command == 'move' then
@@ -46,7 +46,7 @@ local function setup_commands()
     end
   end, {
     nargs = '*',
-    complete = function(arg_lead, cmd_line, cursor_pos)
+    complete = function(arg_lead)
       local commands = { 'show', 'edit', 'file', 'add', 'move', 'delete', 'search' }
 
       local pattern = arg_lead:gsub('(.)', function(c)
@@ -95,7 +95,7 @@ function M.setup(opts)
   end
   setup_commands()
   setup_signs()
-  vim.treesitter.language.register('markdown', 'line_notes')
+  vim.treesitter.language.register('markdown', 'inline_notes')
   -- Load notes
   require('inline').notes.load()
   return M

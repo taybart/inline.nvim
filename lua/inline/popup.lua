@@ -54,8 +54,13 @@ function M:on(event, callback)
   })
 end
 
+-- FIXME: Name lock and when Inline show -> Inline edit
+-- potentially global/static to all buffers visible trait
 function M:on_save(callback)
-  vim.api.nvim_buf_set_name(self.bufnr, 'inline_notes')
+  -- if M.visible then
+  --   print('must close other windows first')
+  -- end
+  vim.api.nvim_buf_set_name(self.bufnr, 'inline_notes' .. self.bufnr)
   vim.api.nvim_create_autocmd('BufWriteCmd', {
     buffer = self.bufnr,
     callback = function()
@@ -76,7 +81,7 @@ function M:map(mode, key, action, opts)
 end
 
 function M:command(command, callback, opts)
-  local opts = opts or {}
+  opts = opts or {}
   vim.api.nvim_buf_create_user_command(self.bufnr, command, callback, opts)
 end
 
