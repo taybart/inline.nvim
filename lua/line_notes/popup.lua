@@ -22,6 +22,7 @@ function M:mount(enter, split)
     col = 0,
     style = 'minimal',
     border = 'rounded',
+    title = 'Note',
   }, require('line_notes.config').config.popup)
   if split then
     win_opts = {

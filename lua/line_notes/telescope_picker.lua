@@ -67,17 +67,17 @@ function M.open_notes_picker()
 
             if target_line == 'file' then
               require('line_notes').notes.show(true, true)
-            elseif target_line > line_count then
+            elseif tonumber(target_line) <= line_count then
+              vim.api.nvim_win_set_cursor(0, { tonumber(target_line), 0 })
+              require('line_notes').notes.show()
+            else
               print(
                 string.format(
-                  'Error: Line %d does not exist in %s',
+                  'Error: Line %s does not exist in %s',
                   target_line,
                   selection.value.file
                 )
               )
-            else
-              vim.api.nvim_win_set_cursor(0, { target_line, 0 })
-              require('line_notes').notes.show()
             end
           end)
         end)
