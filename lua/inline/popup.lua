@@ -2,7 +2,7 @@ local M = {}
 
 function M:new()
   self.bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_set_option_value('filetype', 'line_notes', { buf = self.bufnr })
+  vim.api.nvim_set_option_value('filetype', 'inline_notes', { buf = self.bufnr })
   vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = self.bufnr })
   vim.api.nvim_set_option_value('modifiable', true, { buf = self.bufnr })
   vim.api.nvim_set_option_value('swapfile', false, { buf = self.bufnr })
@@ -23,7 +23,7 @@ function M:mount(enter, split)
     style = 'minimal',
     border = 'rounded',
     title = 'Note',
-  }, require('line_notes.config').config.popup)
+  }, require('inline.config').config.popup)
   if split then
     win_opts = {
       split = 'right',
@@ -55,7 +55,7 @@ function M:on(event, callback)
 end
 
 function M:on_save(callback)
-  vim.api.nvim_buf_set_name(self.bufnr, 'line_notes')
+  vim.api.nvim_buf_set_name(self.bufnr, 'inline_notes')
   vim.api.nvim_create_autocmd('BufWriteCmd', {
     buffer = self.bufnr,
     callback = function()

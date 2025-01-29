@@ -15,7 +15,7 @@ end
 function M.open_notes_picker()
   local file = vim.fn.expand('%:p')
 
-  local all_notes = require('line_notes.notes').notes
+  local all_notes = require('inline.notes').notes
   local ns = all_notes[file] or {}
   local notes = {}
   for line, note in pairs(ns) do
@@ -24,7 +24,7 @@ function M.open_notes_picker()
 
   pickers
     .new({}, {
-      prompt_title = 'Line Notes',
+      prompt_title = 'Inline Notes',
       finder = finders.new_table({
         results = notes,
         entry_maker = function(note)
@@ -66,10 +66,10 @@ function M.open_notes_picker()
             local target_line = selection.value.line
 
             if target_line == 'file' then
-              require('line_notes').notes.show(true, true)
+              require('inline').notes.show(true, true)
             elseif tonumber(target_line) <= line_count then
               vim.api.nvim_win_set_cursor(0, { tonumber(target_line), 0 })
-              require('line_notes').notes.show()
+              require('inline').notes.show()
             else
               print(
                 string.format(

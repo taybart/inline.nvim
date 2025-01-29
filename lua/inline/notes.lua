@@ -1,9 +1,9 @@
 local M = {}
 
-local popup = require('line_notes.popup')
+local popup = require('inline.popup')
 
-local ns_id = vim.api.nvim_create_namespace('LineNotesGroup')
-local notes_file = vim.fn.stdpath('data') .. '/line_notes.json'
+local ns_id = vim.api.nvim_create_namespace('InlineNotesGroup')
+local notes_file = vim.fn.stdpath('data') .. '/inline_notes.json'
 M.notes = {}
 
 local function where()
@@ -153,7 +153,7 @@ function M.load_for_buffer()
     return
   end
 
-  local config = require('line_notes.config').config
+  local config = require('inline.config').config
 
   M.clear_marks(bufnr)
 
@@ -168,7 +168,7 @@ function M.load_for_buffer()
       return
     end
     if config.signcolumn.enabled then
-      vim.fn.sign_place(0, 'LineNotesGroup', 'LineNote', bufnr, { lnum = tonumber(lnum) })
+      vim.fn.sign_place(0, 'InlineNotesGroup', 'InlineNote', bufnr, { lnum = tonumber(lnum) })
     end
     if config.virtual_text.enabled then
       vim.api.nvim_buf_set_extmark(
@@ -237,7 +237,7 @@ function M.save_to_file()
 end
 
 function M.clear_marks(bufnr)
-  vim.fn.sign_unplace('LineNotesGroup', { buffer = bufnr })
+  vim.fn.sign_unplace('InlineNotesGroup', { buffer = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
 end
 

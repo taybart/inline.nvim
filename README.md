@@ -1,10 +1,10 @@
-# Line Notes
+# Inline
 
-**Line_Notes.nvim** is a Neovim plugin to mark specific lines in your code and add notes for future reference. It is meant as a supplement to code comments that you might want to add but don't need or want to be public, or small quick notes to yourself that are tied to a particular line, and are a quicker alternative to Obsidian or Notion or similar.
+Forked from: https://github.com/asmorris/line_notes.nvim
+
+**Inline.nvim** is a Neovim plugin to mark specific lines in your code and add notes for future reference. It is meant as a supplement to code comments that you might want to add but don't need or want to be public, or small quick notes to yourself that are tied to a particular line, and are a quicker alternative to Obsidian or Notion or similar.
 
 ## Demo
-
-![lineNotes](https://github.com/user-attachments/assets/b361cf26-4d23-4eca-8e10-81a8fcf68954)
 
 ## Features
 
@@ -20,16 +20,16 @@ Using `lazy.nvim`:
 
 ```lua
 {
-    "asmorris/line_notes.nvim",
+    "taybart/inline.nvim",
     dependencies = { 'nvim-telescope/telescope.nvim' },
     config = function()
-        local in = require('line_notes')
+        local in = require('inline')
         in.setup({
             signcolumn = {
                 enabled = false,
             },
             virtual_text = {
-                note_icon = "🗒️",         -- Icon shown in the sign column
+                icon = "🗒️",  -- Icon shown at the end of the line
             },
         })
         vim.keymap.set('n', '<leader>N', function()
@@ -41,22 +41,34 @@ Using `lazy.nvim`:
 
 ## Default Configuration
 
-The plugin comes with sensible defaults, but you can customize them to your liking. Here's the default configuration:
-
 ```lua
-require('line_notes').setup({
-    -- Customize keymaps
-    keymaps = {
-        add_note = "<leader>an",    -- Add a new note
-        list_notes = "<leader>ln",  -- Open telescope picker with all notes
-        delete_note = "<leader>dn", -- Delete note on current line
-        show_note = "<leader>sn"    -- Show/edit note on current line
-    },
-    -- Customize note appearance
-    signs = {
-        note_icon = "🗒️",         -- Icon shown in the sign column
-        highlight = "Comment",     -- Highlight group for the icon
-        number_highlight = ""      -- Highlight group for line numbers (empty for no highlight)
-    }
+require('inline').setup({
+  keymaps = {
+    enabled = true,
+    add_note = '<leader>an',
+    list_notes = '<leader>ln',
+    delete_note = '<leader>dn',
+    show_note = '<leader>sn',
+  },
+  signcolumn = {
+    enabled = true,
+    icon = '>',
+    highlight = 'Comment',
+    number_highlight = '',
+  },
+  virtual_text = {
+    enabled = true,
+    icon = '!',
+    highlight = 'Comment',
+  },
+  popup = {
+    relative = 'cursor',
+    width = 50,
+    height = 10,
+    row = 1,
+    col = 1,
+    style = 'minimal',
+    border = 'rounded',
+  },
 })
 ```
