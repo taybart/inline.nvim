@@ -68,7 +68,7 @@ end
 local function setup_signs()
   local sign_config = require('inline.config').config.signcolumn
   vim.fn.sign_define('InlineNote', {
-    text = sign_config.note_icon,
+    text = sign_config.icon,
     texthl = sign_config.highlight,
     numhl = sign_config.number_highlight,
   })
