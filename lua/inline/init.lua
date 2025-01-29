@@ -10,9 +10,9 @@ local function setup_commands()
   })
   -- easy escape from float
   vim.api.nvim_create_autocmd('FileType', {
-    pattern = 'line_notes',
+    pattern = 'inline_notes',
     callback = function()
-      vim.b.filetype = 'markdown'
+      vim.bo.filetype = 'markdown'
       vim.keymap.set('n', 'q', '<cmd>close!<CR>', { buffer = true, silent = true })
       vim.keymap.set('n', '<esc>', '<cmd>close!<CR>', { buffer = true, silent = true })
     end,

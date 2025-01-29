@@ -207,7 +207,8 @@ end
 
 function M.save(filename, line, bufnr)
   local file_notes = M.notes[filename] or {}
-  local note = file_notes[tostring(line)]
+  line = tostring(line)
+  local note = file_notes[line]
 
   local edited_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local new_note = table.concat(edited_lines, '\n')
@@ -217,7 +218,10 @@ function M.save(filename, line, bufnr)
     return
   end
 
-  file_notes[tostring(line)] = new_note
+  file_notes[line] = new_note
+  if new_note == '' then
+    file_notes[line] = nil
+  end
   M.notes[filename] = file_notes
   M.save_to_file()
 end
