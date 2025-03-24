@@ -29,6 +29,7 @@ M.defaults = {
     style = 'minimal',
     border = 'rounded',
   },
+  telescope_available = false,
 }
 
 -- Store the user's configuration
@@ -38,6 +39,8 @@ M.config = {}
 function M.setup(opts)
   -- Merge user options with defaults
   M.config = vim.tbl_deep_extend('force', M.defaults, opts or {})
+
+  M.config.telescope_available = package.loaded['telescope']
 
   -- Validate configuration
   M.validate()

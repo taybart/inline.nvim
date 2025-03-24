@@ -1,28 +1,12 @@
 local M = {}
 
-local function setup_commands()
+local function setup_user_command()
   local il = require('inline')
-  -- Set up autocmd for buffer events
-  vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufEnter' }, {
-    callback = function()
-      il.notes.load_for_buffer()
-    end,
-  })
-  -- easy escape from float
-  vim.api.nvim_create_autocmd('FileType', {
-    pattern = 'inline_notes',
-    callback = function()
-      vim.bo.filetype = 'markdown'
-      vim.keymap.set('n', 'q', '<cmd>close!<CR>', { buffer = true, silent = true })
-      vim.keymap.set('n', '<esc>', '<cmd>close!<CR>', { buffer = true, silent = true })
-    end,
-  })
-
   vim.api.nvim_create_user_command('Inline', function(opts)
     local args = vim.split(opts.args, '%s+', { trimempty = true })
     -- Default
     if #args == 0 then
-      il.notes.show()
+      il.notes.show(false)
       return
     end
 
@@ -64,6 +48,25 @@ local function setup_commands()
   })
 end
 
+local function setup_commands()
+  local il = require('inline')
+  -- Set up autocmd for buffer events
+  vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufEnter' }, {
+    callback = function()
+      il.notes.load_for_buffer()
+    end,
+  })
+  -- easy escape from float
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'inline_notes',
+    callback = function()
+      vim.bo.filetype = 'markdown'
+      vim.keymap.set('n', 'q', '<cmd>close!<CR>', { buffer = true, silent = true })
+      vim.keymap.set('n', '<esc>', '<cmd>close!<CR>', { buffer = true, silent = true })
+    end,
+  })
+end
+
 -- Define signs based on configuration
 local function setup_signs()
   local sign_config = require('inline.config').config.signcolumn
@@ -93,6 +96,7 @@ function M.setup(opts)
   if config.keymaps.enabled then
     setup_keymaps(config.keymaps)
   end
+  setup_user_command()
   setup_commands()
   setup_signs()
   vim.treesitter.language.register('markdown', 'inline_notes')

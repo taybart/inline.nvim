@@ -72,3 +72,20 @@ require('inline').setup({
   },
 })
 ```
+
+## Usage
+
+```vim
+:Inline show
+:Inline edit
+:Inline file
+:Inline add
+:Inline move
+:Inline delete
+:Inline search
+}
+```
+
+### TODO
+
+- [ ] Lazy load inital file read

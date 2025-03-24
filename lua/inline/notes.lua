@@ -1,5 +1,4 @@
 local M = {}
-
 local popup = require('inline.popup')
 
 local ns_id = vim.api.nvim_create_namespace('InlineNotesGroup')
@@ -201,7 +200,7 @@ function M.load()
       error('failed to decode notes')
     end
   else
-    print('no saved notes found')
+    -- vim.notify('no saved notes found')
   end
 end
 
