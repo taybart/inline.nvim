@@ -1,86 +1,107 @@
-local M = {}
-local popup = require('inline.popup')
+local M = {
+  ns_id = vim.api.nvim_create_namespace("InlineNotesGroup"),
+}
+local popup = require("inline.popup")
+local db = require("inline.db").new()
 
-local ns_id = vim.api.nvim_create_namespace('InlineNotesGroup')
-local notes_file = vim.fn.stdpath('data') .. '/inline_notes.json'
-M.notes = {}
+-- local ns_id = vim.api.nvim_create_namespace("InlineNotesGroup")
+-- local notes_file = vim.fn.stdpath("data") .. "/inline_notes.json"
+
+local function line()
+  return vim.fn.line(".")
+end
+local function file()
+  return vim.fn.expand("%:p")
+end
 
 local function where()
-  local line = vim.fn.line('.')
+  local line = vim.fn.line(".")
   local bufnr = vim.api.nvim_get_current_buf()
-  local file = vim.fn.expand('%:p')
+  local file = vim.fn.expand("%:p")
   return { line = line, bufnr = bufnr, file = file }
 end
 
-function M.add()
-  local wh = where()
-  local file_notes = M.notes[wh.file] or {}
-  local note = file_notes[tostring(wh.line)]
+function M.has()
+  local note = db:get(file(), line()) or {}
+  return note.content ~= nil
+end
 
+function M.add()
+  M.edit()
+end
+
+function M.edit()
+  local wh = where()
+  local note = db:get(wh.file, wh.line)
   local p = popup:new()
   p:on_save(function()
-    M.save(wh.file, wh.line, p.bufnr)
+    local edited_lines = vim.api.nvim_buf_get_lines(p.bufnr, 0, -1, false)
+    db:upsert({
+      file = wh.file,
+      row = wh.line,
+      content = table.concat(edited_lines, "\n"),
+    })
   end)
 
   if note then
-    local note_lines = vim.split(note, '\n', { plain = true })
+    local note_lines = vim.split(note.content, "\n", { plain = true })
     vim.api.nvim_buf_set_lines(p.bufnr, 0, -1, false, note_lines)
     p:set_content(note_lines)
   end
 
   p:mount()
 
-  p:map('n', '<enter>', function()
+  p:map("n", "<enter>", function()
     -- save_note()
   end, { noremap = true, silent = true })
-  p:on('BufLeave', function()
+  p:on("BufLeave", function()
     -- don't save
     -- M.save()
-    M.save(wh.file, wh.line, p.bufnr)
+    -- M.save(wh.file, wh.line, p.bufnr)
     p:unmount()
   end)
 end
 
-function M.show(enter, file)
-  if enter == nil then
-    enter = true
+function M.show(opts)
+  opts = opts or { focus = true, file = false }
+  if opts.focus == nil then
+    opts.focus = true
   end
-  if file == nil then
-    file = false
+  if opts.file == nil then
+    opts.file = false
   end
 
   local wh = where()
-  local file_notes = M.notes[wh.file] or {}
-  if file then
-    wh.line = 'file'
-  end
-  local note = file_notes[tostring(wh.line)]
+
+  local note = db:get(wh.file, wh.line)
   if not note then
-    note = ''
-    if not file then
-      print('no note at line')
-      return
-    end
+    print("no note at line")
+    return
   end
 
-  local note_lines = vim.split(note, '\n', { plain = true })
-
+  -- TODO: refact into "edit" function since this is a repeat of add
   local p = popup:new()
   p:on_save(function()
-    M.save(wh.file, wh.line, p.bufnr)
+    local edited_lines = vim.api.nvim_buf_get_lines(p.bufnr, 0, -1, false)
+    db:upsert({
+      file = wh.file,
+      row = wh.line,
+      content = table.concat(edited_lines, "\n"),
+    })
   end)
-  p:on('BufLeave', function()
+  p:on("BufLeave", function()
     -- M.save(wh.file, wh.line, p.bufnr)
     p:unmount()
   end)
 
-  p:mount(enter, file)
+  p:mount(opts.focus, opts.file)
 
+  local note_lines = vim.split(note.content, "\n", { plain = true })
   vim.api.nvim_buf_set_lines(p.bufnr, 0, -1, false, note_lines)
 
   -- if its a hover win remove on navigate
-  if not enter then
-    vim.api.nvim_create_autocmd('CursorMoved', {
+  if not opts.focus then
+    vim.api.nvim_create_autocmd("CursorMoved", {
       buffer = wh.bufnr,
       once = true,
       callback = function()
@@ -90,158 +111,49 @@ function M.show(enter, file)
   end
 end
 
-function M.move()
-  local wh = where()
-
-  if vim.api.nvim_buf_is_valid(wh.bufnr) == false then
-    error('invalid buffer!')
-    return
-  end
-
-  if not wh.line then
-    error('invalid line number!')
-    return
-  end
-
-  local file_notes = M.notes[wh.file] or {}
-  if not file_notes[tostring(wh.line)] then
-    print('no note found on this line')
-    return
-  end
-
-  local new_line = vim.fn.input('Move ' .. wh.line .. ' to -> ')
-  local note = file_notes[tostring(wh.line)]
-  file_notes[tostring(wh.line)] = nil
-
-  file_notes[new_line] = note
-  M.notes[wh.file] = file_notes
-  M.save_to_file()
-  M.load_for_buffer()
-end
-
 function M.delete()
   local wh = where()
 
-  if vim.api.nvim_buf_is_valid(wh.bufnr) == false then
-    error('invalid buffer!')
+  if not vim.api.nvim_buf_is_valid(wh.bufnr) then
+    error("invalid buffer!")
     return
   end
 
-  if not wh.line then
-    error('invalid line number!')
-    return
-  end
+  db:del(wh.file, wh.line)
 
-  local file_notes = M.notes[wh.file] or {}
-  if not file_notes[tostring(wh.line)] then
-    print('no note found on this line')
-    return
-  end
-
-  file_notes[tostring(wh.line)] = nil
-  M.notes[wh.file] = file_notes
-  M.save_to_file()
-  M.load_for_buffer()
+  M.set_extmarks()
 end
 
-function M.load_for_buffer()
+function M.clear_extmarks()
   local bufnr = vim.api.nvim_get_current_buf()
-  local current_file = vim.fn.expand('%:p')
+  vim.fn.sign_unplace("InlineNotesGroup", { buffer = bufnr })
+  vim.api.nvim_buf_clear_namespace(bufnr, M.ns_id, 0, -1)
+end
 
-  if not M.notes or type(M.notes) ~= 'table' then
-    return
-  end
+function M.set_extmarks()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local config = require("inline").config
 
-  local config = require('inline.config').config
+  local notes = db:get_file(vim.api.nvim_buf_get_name(bufnr)) or {}
 
-  M.clear_marks(bufnr)
-
-  local file_notes = M.notes[current_file] or {}
-  for lnum in pairs(file_notes) do
-    if lnum == 'file' then
-      goto continue
-    end
-    lnum = tonumber(lnum)
-    if not lnum then
-      print('invalid line number')
-      return
-    end
+  M.clear_extmarks()
+  for _, note in ipairs(notes) do
     if config.signcolumn.enabled then
-      vim.fn.sign_place(0, 'InlineNotesGroup', 'InlineNote', bufnr, { lnum = lnum })
+      vim.fn.sign_place(0, "InlineNotesGroup", "InlineNote", bufnr, { lnum = note.row })
     end
     if config.virtual_text.enabled then
-      vim.api.nvim_buf_set_extmark(
-        bufnr,
-        ns_id,
-        lnum - 1, -- 0 indexed
-        0,
-        { virt_text = { { config.virtual_text.icon, config.virtual_text.highlight } } }
-      )
+      -- stylua: ignore
+      vim.api.nvim_buf_set_extmark(bufnr, M.ns_id, note.row - 1, 0,
+        {
+          virt_text = {
+            {
+              config.virtual_text.icon,
+              config.virtual_text.highlight,
+            },
+          }
+        })
     end
-    ::continue::
   end
-end
-
-function M.load()
-  local file = io.open(notes_file, 'r')
-  if file then
-    local content = file:read('*a')
-    file:close()
-    if not content or content == '' then
-      return
-    end
-    local decoded = vim.fn.json_decode(content)
-    if decoded then
-      M.notes = decoded
-
-      local bufnr = vim.api.nvim_get_current_buf()
-      M.clear_marks(bufnr)
-    else
-      error('failed to decode notes')
-    end
-  else
-    -- vim.notify('no saved notes found')
-  end
-end
-
-function M.save(filename, line, bufnr)
-  local file_notes = M.notes[filename] or {}
-  line = tostring(line)
-  local note = file_notes[line]
-
-  local edited_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  local new_note = table.concat(edited_lines, '\n')
-
-  if note == new_note then
-    print('no changes made to the note')
-    return
-  end
-
-  file_notes[line] = new_note
-  if new_note == '' then
-    file_notes[line] = nil
-  end
-  M.notes[filename] = file_notes
-  M.save_to_file()
-end
-
-function M.save_to_file()
-  local file = io.open(notes_file, 'w')
-  if file then
-    local encoded = vim.fn.json_encode(M.notes)
-    file:write(encoded)
-    file:close()
-    print('note updated')
-    return true
-  else
-    print('unable to save notes')
-    return false
-  end
-end
-
-function M.clear_marks(bufnr)
-  vim.fn.sign_unplace('InlineNotesGroup', { buffer = bufnr })
-  vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
 end
 
 return M

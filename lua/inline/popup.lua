@@ -2,10 +2,10 @@ local M = {}
 
 function M:new()
   self.bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_set_option_value('filetype', 'inline_notes', { buf = self.bufnr })
-  vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = self.bufnr })
-  vim.api.nvim_set_option_value('modifiable', true, { buf = self.bufnr })
-  vim.api.nvim_set_option_value('swapfile', false, { buf = self.bufnr })
+  vim.api.nvim_set_option_value("filetype", "inline_notes", { buf = self.bufnr })
+  vim.api.nvim_set_option_value("buftype", "acwrite", { buf = self.bufnr })
+  vim.api.nvim_set_option_value("modifiable", true, { buf = self.bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = self.bufnr })
 
   return self
 end
@@ -14,19 +14,19 @@ function M:mount(enter, split)
   if enter == nil then
     enter = true
   end
-  local win_opts = vim.tbl_deep_extend('force', {
-    relative = 'cursor',
+  local win_opts = vim.tbl_deep_extend("force", {
+    relative = "cursor",
     width = 50,
     height = 10,
     row = 0,
     col = 0,
-    style = 'minimal',
-    border = 'rounded',
-    title = 'Note',
-  }, require('inline.config').config.popup)
+    style = "minimal",
+    border = "rounded",
+    title = "Note",
+  }, require("inline").config.popup)
   if split then
     win_opts = {
-      split = 'right',
+      split = "right",
       win = 0,
     }
   end
@@ -60,8 +60,8 @@ function M:on_save(callback)
   -- if M.visible then
   --   print('must close other windows first')
   -- end
-  vim.api.nvim_buf_set_name(self.bufnr, 'inline_notes' .. self.bufnr)
-  vim.api.nvim_create_autocmd('BufWriteCmd', {
+  vim.api.nvim_buf_set_name(self.bufnr, "inline_notes" .. self.bufnr)
+  vim.api.nvim_create_autocmd("BufWriteCmd", {
     buffer = self.bufnr,
     callback = function()
       callback()
@@ -72,12 +72,7 @@ function M:on_save(callback)
 end
 
 function M:map(mode, key, action, opts)
-  vim.keymap.set(
-    mode,
-    key,
-    action,
-    vim.tbl_deep_extend('keep', { buffer = self.bufnr }, opts or {})
-  )
+  vim.keymap.set(mode, key, action, vim.tbl_deep_extend("keep", { buffer = self.bufnr }, opts or {}))
 end
 
 function M:command(command, callback, opts)
