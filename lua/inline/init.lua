@@ -95,8 +95,6 @@ function M.setup(opts)
   signs()
   require("inline.code-actions").register_code_actions()
   vim.treesitter.language.register("markdown", "inline_notes")
-  -- Load notes
-  -- M.notes.load()
 end
 
 return M

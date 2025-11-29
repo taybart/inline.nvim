@@ -1,8 +1,11 @@
 local M = {}
 
-local Snacks = require("snacks")
-
 function M.pick_notes()
+  local has_snacks = pcall(require, "snacks")
+  if not has_snacks then
+    return
+  end
+
   local db = require("inline.db").new()
 
   local current_file = vim.api.nvim_buf_get_name(0)
@@ -26,7 +29,7 @@ function M.pick_notes()
     })
   end
 
-  Snacks.picker.pick({
+  require("snacks").picker.pick({
     items = items,
     prompt = "Select a note:",
     format = "text",
