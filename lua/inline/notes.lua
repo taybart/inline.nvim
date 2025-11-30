@@ -4,16 +4,6 @@ local M = {
 local popup = require("inline.popup")
 local db = require("inline.db").new()
 
--- local ns_id = vim.api.nvim_create_namespace("InlineNotesGroup")
--- local notes_file = vim.fn.stdpath("data") .. "/inline_notes.json"
-
-local function line()
-  return vim.fn.line(".")
-end
-local function file()
-  return vim.fn.expand("%:p")
-end
-
 local function where()
   local line = vim.fn.line(".")
   local bufnr = vim.api.nvim_get_current_buf()
@@ -22,7 +12,8 @@ local function where()
 end
 
 function M.has()
-  local note = db:get(file(), line()) or {}
+  local wh = where()
+  local note = db:get(wh.file, wh.line) or {}
   return note.content ~= nil
 end
 

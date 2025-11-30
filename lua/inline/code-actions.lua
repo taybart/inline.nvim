@@ -24,18 +24,12 @@ function M.register_code_actions()
       {
         command = 'Edit Note',
         show = has_note,
-        fn = function()
-          -- require('inline.notes').show(false)
-          require('inline.notes').show()
-        end,
+        fn = function() require('inline.notes').show() end,
       },
       {
         command = 'View Note',
         show = has_note,
-        fn = function()
-          -- require('inline.notes').show(false)
-          require('inline.notes').show({ focus = false })
-        end,
+        fn = function() require('inline.notes').show({ focus = false }) end,
       },
       {
         command = 'Delete Note',
